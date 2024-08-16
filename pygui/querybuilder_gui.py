@@ -66,7 +66,7 @@ from plotnine import (
 try:
     from pip_cuda import get_spatial_selection_gpu
 except ImportError:
-    print('cuspatial not available')
+    print('cuspatial not available - querybuilder_gui.py')
 from pip_cpu import get_spatial_selection_cpu
 # self.send_image_path.connect(self.savekml.from_main_signal)
 
@@ -351,7 +351,10 @@ class QueryBuilder(QWidget, Ui_Form):
         return check
 
     def refresh_settings(self):
+        # get the settings
+        print("getting settings")
         self.settings = get_settings(self.config)
+        print("settings loaded: ", self.settings)
         self.logitude_field = self.logitude.text()
         self.latitude_field = self.latitude.text()
         self.xutm_field = self.xutm.text()

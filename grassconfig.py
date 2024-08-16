@@ -24,9 +24,9 @@ class GrassConfigDialog(QDialog, GrassSettings):
         self.setupUi(self)
         # access to the settings
         self.config = config # os.environ.get('HBC_CONFIG')
-        if not self.settings:
-            self.show_dialog()
-            self.settings = get_settings(self.config)
+        #if not self.settings:
+        #    self.show_dialog()
+        self.settings = get_settings(self.config)
         #
         # set the grass api from config
         # print("self.settings['Processing']['grass_api_endpoint']: ", self.settings["Processing"]["grass_api_endpoint"])
@@ -125,13 +125,18 @@ class GrassConfigDialog(QDialog, GrassSettings):
         }
 
         response = requests.get(
-            f'{endpoint}/api/create_mapset', params=params, headers=headers)
+            f'{endpoint}/api/create_mapset', params=params, headers=headers, timeout=30)
         self.command_output.setText(json.dumps(
             response.json(), sort_keys=True, indent=4))
         self.set_status_color(response.json()['status'])
         return response.json()
 
     def get_location_list(self):
+        """_summary_
+         get the list of locations from the grass api
+        Returns:
+            _type_: _description_
+        """
         endpoint = self.grass_api_endpoint.text()
         grass_gisdb = self.grass_gisdb.text()
         headers = {
@@ -142,7 +147,7 @@ class GrassConfigDialog(QDialog, GrassSettings):
         }
         try:
             response = requests.get(
-                f'{endpoint}/api/get_location_list', params=params, headers=headers)
+                f'{endpoint}/api/get_location_list', params=params, headers=headers, timeout=30)
             self.command_output.setText(json.dumps(
                 response.json(), sort_keys=True, indent=4))
             self.set_status_color(response.json()['status'])
