@@ -44,6 +44,8 @@ from skimage.io import imread
 import numpy as np
 from scipy import spatial
 
+from qgis.core import QgsMapLayerType
+
 from groundtruther.configure import get_settings, ConfigDialog, error_message
 from groundtruther.ioutils import parse_annotation
 
@@ -278,7 +280,32 @@ class GroundTrutherDockWidget(QtWidgets.QDockWidget, Ui_GroundTrutherDockWidgetB
     def show_grass_dialog(self):
         """docstring"""
         self.grass_dialog.exec_()
-        print(self.grass_dialog.grassenabled)        
+        print(self.grass_dialog.grassenabled)   
+        if self.grass_dialog.grassenabled:
+            self.init_grass_contextual_menu()
+    
+
+    def init_grass_contextual_menu(self):
+        if self.grass_dialog.grassenabled:
+            self.w.gisTools_logger.setText("GRASS GIS enabled")
+            self.action_import_raster = QAction( u"Import selected layer into GRASS Server")
+            self.action_import_raster.triggered.connect(lambda: print('raster action triggered - import'))
+            self.action_set_computational_region_from_raster = QAction( u"Set GRASS Server Computational Region to layer extent")
+            self.action_set_computational_region_from_raster.triggered.connect(lambda: print('raster action triggered - set region'))
+            iface.addCustomActionForLayerType(self.action_import_raster, 'GroundTruther', QgsMapLayerType.RasterLayer, True)
+            iface.addCustomActionForLayerType(self.action_set_computational_region_from_raster, 'GroundTruther', QgsMapLayerType.RasterLayer, True)
+            
+            self.action_import_vector = QAction( u"Import selected layer into GRASS Server")
+            self.action_import_vector.triggered.connect(lambda: print('vector action triggered - import'))
+            self.action_set_computational_region_from_vector = QAction( u"Set GRASS Server Computational Region to layer extent")
+            self.action_set_computational_region_from_vector.triggered.connect(lambda: print('vector action triggered - set region'))
+            iface.addCustomActionForLayerType(self.action_import_vector, 'GroundTruther', QgsMapLayerType.VectorLayer, True)
+            iface.addCustomActionForLayerType(self.action_set_computational_region_from_vector, 'GroundTruther', QgsMapLayerType.VectorLayer, True)
+            
+            # Create the main action that triggers the submenu
+            self.main_action = QAction("Custom Menu", iface.mainWindow())
+            self.main_action.triggered.connect(lambda: self.show_custom_submenu(iface.activeLayer()))
+            iface.addCustomActionForLayerType(self.main_action, 'My new Vector Menu', QgsMapLayerType.VectorLayer, True)
 
     def init_grass_ui(self):
         # create the widget for grass which goes into the splitter

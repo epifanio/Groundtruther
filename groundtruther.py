@@ -25,14 +25,19 @@ import os, sys
 sys.path.append(os.path.dirname(__file__))
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
-from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QComboBox
+from qgis.PyQt.QtGui import QIcon, QCursor
+from qgis.PyQt.QtWidgets import QAction, QComboBox, QMenu #, 
 # Initialize Qt resources from file resources.py
+
 from .resources_rc import *
+
 from qgis.gui import QgsMapToolEmitPoint
 import groundtruther.resources_rc
 
 from groundtruther.dependencies.solver import SolveDependencies
+
+
+from qgis.core import QgsMapLayerType
 
 # here I run the solver directly which is not fair...
 # better open a prompt / dialog and ask of it is OK
@@ -63,6 +68,25 @@ class GroundTruther:
         # Save reference to the QGIS interface
         self.iface = iface
 
+        # self.action_import_raster = QAction( u"Import selected layer into GRASS Server")
+        # self.action_import_raster.triggered.connect(lambda: print('raster action triggered - import'))
+        # self.action_set_computational_region_from_raster = QAction( u"Set GRASS Server Computational Region to layer extent")
+        # self.action_set_computational_region_from_raster.triggered.connect(lambda: print('raster action triggered - set region'))
+        # self.iface.addCustomActionForLayerType(self.action_import_raster, 'GroundTruther', QgsMapLayerType.RasterLayer, True)
+        # self.iface.addCustomActionForLayerType(self.action_set_computational_region_from_raster, 'GroundTruther', QgsMapLayerType.RasterLayer, True)
+        
+        # self.action_import_vector = QAction( u"Import selected layer into GRASS Server")
+        # self.action_import_vector.triggered.connect(lambda: print('vector action triggered - import'))
+        # self.action_set_computational_region_from_vector = QAction( u"Set GRASS Server Computational Region to layer extent")
+        # self.action_set_computational_region_from_vector.triggered.connect(lambda: print('vector action triggered - set region'))
+        # self.iface.addCustomActionForLayerType(self.action_import_vector, 'GroundTruther', QgsMapLayerType.VectorLayer, True)
+        # self.iface.addCustomActionForLayerType(self.action_set_computational_region_from_vector, 'GroundTruther', QgsMapLayerType.VectorLayer, True)
+        
+        # # Create the main action that triggers the submenu
+        # self.main_action = QAction("Custom Menu", self.iface.mainWindow())
+        # self.main_action.triggered.connect(lambda: self.show_custom_submenu(self.iface.activeLayer()))
+        # self.iface.addCustomActionForLayerType(self.main_action, 'My new Vector Menu', QgsMapLayerType.VectorLayer, True)
+
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
 
@@ -90,6 +114,24 @@ class GroundTruther:
         self.pluginIsActive = False
         self.dockwidget = None
 
+    # def show_custom_submenu(self, layer):
+    #     # Create the submenu
+    #     submenu = QMenu("Custom Submenu", self.iface.mainWindow())
+
+    #     # Add actions to the submenu
+    #     self.action1 = QAction("Custom Action 1", self.iface.mainWindow())
+    #     self.action1.triggered.connect(lambda: self.custom_action("Action 1", layer))
+    #     submenu.addAction(self.action1)
+        
+    #     self.action2 = QAction("Custom Action 2", self.iface.mainWindow())
+    #     self.action2.triggered.connect(lambda: self.custom_action("Action 2", layer))
+    #     submenu.addAction(self.action2)
+        
+    #     # Show the submenu at the current mouse position
+    #     submenu.exec_(QCursor.pos())
+
+    # def custom_action(self, action_name, layer):
+    #     self.iface.messageBar().pushMessage("Custom Action", f"{action_name} triggered on layer: {layer.name()}")
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -327,6 +369,10 @@ class GroundTruther:
             grass_cpr_action)
         self.actions.append(grass_cpr_action)
         
+        #a = QAction( u"My Raster Action")
+        #a.triggered.connect(lambda: print('action triggered'))
+        #self.iface.addCustomActionForLayerType(a, 'My Raster Menu', QgsMapLayerType.RasterLayer, True)
+        
         
     # def select_grass_region(self, index):
     #     print(index)
@@ -382,8 +428,13 @@ class GroundTruther:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
-        #print "** UNLOAD GroundTruther"
-
+        if self.dockwidget.grass_dialog.grassenabled:
+            self.iface.removeCustomActionForLayerType(self.dockwidget.action_import_raster)
+            self.iface.removeCustomActionForLayerType(self.dockwidget.action_set_computational_region_from_raster)  
+            self.iface.removeCustomActionForLayerType(self.dockwidget.action_import_vector)
+            self.iface.removeCustomActionForLayerType(self.dockwidget.action_set_computational_region_from_vector)
+        if self.dockwidget is not None:
+            self.iface.removeDockWidget(self.dockwidget)
         for action in self.actions:
             self.iface.removePluginMenu(
                 self.tr(u'&GroundTruther'),
@@ -402,12 +453,12 @@ class GroundTruther:
         if not self.pluginIsActive:
             self.pluginIsActive = True
 
-            #print "** STARTING GroundTruther"
+            print("** STARTING GroundTruther")
 
             # dockwidget may not exist if:
             #    first run of plugin
             #    removed on close (see self.onClosePlugin method)
-            if self.dockwidget == None:
+            if self.dockwidget is None:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = GroundTrutherDockWidget()
 
@@ -418,10 +469,10 @@ class GroundTruther:
             # TODO: fix to allow choice of dock location
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
-            if self.dockwidget != None:
-                if self.dockwidget.m1 != None:
+            if self.dockwidget is not None:
+                if self.dockwidget.m1 is not None:
                     print(self.dockwidget.m1)
                     self.iface.mapCanvas().scene().addItem(self.dockwidget.m1)
-                if self.dockwidget.r != None:
+                if self.dockwidget.r is not None:
                     print(self.dockwidget.r)
                     self.iface.mapCanvas().scene().addItem(self.dockwidget.r)
