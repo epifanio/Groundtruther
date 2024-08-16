@@ -47,7 +47,7 @@ from scipy import spatial
 from qgis.core import QgsMapLayerType
 
 from groundtruther.configure import get_settings, ConfigDialog, error_message
-from groundtruther.ioutils import parse_annotation
+from groundtruther.ioutils import parse_annotation, get_layer_info, send_layer_as_geojson, convert_to_geojson_using_gdal
 
 from groundtruther.pygui.Ui_groundtruther_dockwidget_base import Ui_GroundTrutherDockWidgetBase  
 from groundtruther.pygui.hbc_browser_gui import HBCBrowserGui
@@ -289,23 +289,86 @@ class GroundTrutherDockWidget(QtWidgets.QDockWidget, Ui_GroundTrutherDockWidgetB
         if self.grass_dialog.grassenabled:
             self.w.gisTools_logger.setText("GRASS GIS enabled")
             self.action_import_raster = QAction( u"Import selected layer into GRASS Server")
-            self.action_import_raster.triggered.connect(lambda: print('raster action triggered - import'))
+            # self.action_import_raster.triggered.connect(lambda: print('raster action triggered - import'))
+            self.action_import_raster.triggered.connect(self.import_active_raster_layer_to_grass)
             self.action_set_computational_region_from_raster = QAction( u"Set GRASS Server Computational Region to layer extent")
-            self.action_set_computational_region_from_raster.triggered.connect(lambda: print('raster action triggered - set region'))
+            # self.action_set_computational_region_from_raster.triggered.connect(lambda: print('raster action triggered - set region'))
+            self.action_import_raster.triggered.connect(self.set_grass_region_from_raster)
             iface.addCustomActionForLayerType(self.action_import_raster, 'GroundTruther', QgsMapLayerType.RasterLayer, True)
             iface.addCustomActionForLayerType(self.action_set_computational_region_from_raster, 'GroundTruther', QgsMapLayerType.RasterLayer, True)
-            
             self.action_import_vector = QAction( u"Import selected layer into GRASS Server")
-            self.action_import_vector.triggered.connect(lambda: print('vector action triggered - import'))
+            # self.action_import_vector.triggered.connect(lambda: print('vector action triggered - import'))
+            self.action_import_vector.triggered.connect(self.import_active_vector_layer_to_grass)
             self.action_set_computational_region_from_vector = QAction( u"Set GRASS Server Computational Region to layer extent")
-            self.action_set_computational_region_from_vector.triggered.connect(lambda: print('vector action triggered - set region'))
+            # self.action_set_computational_region_from_vector.triggered.connect(lambda: print('vector action triggered - set region'))
+            self.action_set_computational_region_from_vector.triggered.connect(self.set_grass_region_from_vector)
             iface.addCustomActionForLayerType(self.action_import_vector, 'GroundTruther', QgsMapLayerType.VectorLayer, True)
             iface.addCustomActionForLayerType(self.action_set_computational_region_from_vector, 'GroundTruther', QgsMapLayerType.VectorLayer, True)
-            
             # Create the main action that triggers the submenu
             self.main_action = QAction("Custom Menu", iface.mainWindow())
             self.main_action.triggered.connect(lambda: self.show_custom_submenu(iface.activeLayer()))
             iface.addCustomActionForLayerType(self.main_action, 'My new Vector Menu', QgsMapLayerType.VectorLayer, True)
+            
+            
+    def set_grass_region_from_raster(self):
+        print('raster action triggered - set region')
+        print(iface.activeLayer())
+        print(get_layer_info(iface.activeLayer()))
+        
+    def set_grass_region_from_vector(self):
+        print('vector action triggered - set region')
+        print(iface.activeLayer())
+        print(get_layer_info(iface.activeLayer()))
+        
+        selected_features = iface.activeLayer().selectedFeatures()
+    
+        # Loop through the selected features
+        selected_geometries = []
+        x_min = []
+        y_min = []
+        x_max = []
+        y_max = []
+        for feature in selected_features:
+            # Get the feature ID
+            feature_id = feature.id()
+        
+            # Get the geometry of the feature
+            geom = feature.geometry()
+        
+            # Get attributes of the feature
+            attrs = feature.attributes()
+        
+            # Print feature ID, geometry, and attributes
+            print(f"Feature ID: {feature_id}")
+            print(f"Geometry: {geom.asWkt()}")  # Print geometry as WKT
+            print(f"Attributes: {attrs}")
+            rect = geom.boundingBox()
+            x_min.append(rect.xMinimum())
+            y_min.append(rect.yMinimum())
+            x_max.append(rect.xMaximum())
+            y_max.append(rect.yMaximum())
+            
+            # selected_geometries.append([x_min, y_min, x_max, y_max])
+            # print(dir(geom.boundingBox().toString()))
+        xx_min = min(x_min)
+        yy_min = min(y_min)
+        xx_max = max(x_max)
+        yy_max = max(y_max)
+        bbox_selection = [xx_min, yy_min, xx_max, yy_max]
+        print(bbox_selection)
+        # add a vector layer to the map, showing the computed bounding box
+        
+        
+    def import_active_raster_layer_to_grass(self):
+        print('raster action triggered - import raster')
+        print(iface.activeLayer()) 
+        print(get_layer_info(iface.activeLayer()))
+        
+    def import_active_vector_layer_to_grass(self): 
+        print('vector action triggered - import vector')
+        print(iface.activeLayer())
+        print(get_layer_info(iface.activeLayer()))
+        print(convert_to_geojson_using_gdal(iface.activeLayer().source()), self.grass_api_endpoint)
 
     def init_grass_ui(self):
         # create the widget for grass which goes into the splitter
