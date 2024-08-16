@@ -36,7 +36,7 @@ class ConfigDialog(QDialog, AppSettings):
         self.select_imageannotation_path.clicked.connect(
             self.set_imageannotation_path)
         self.select_mbes_path.clicked.connect(self.set_mbes_path)
-        self.select_vrt_path.clicked.connect(self.set_vrt_path)
+        #self.select_vrt_path.clicked.connect(self.set_vrt_path)
         self.select_kml_path.clicked.connect(self.set_kml_path)
 
         self.gpu_avaibility.currentIndexChanged.connect(
@@ -174,7 +174,7 @@ class ConfigDialog(QDialog, AppSettings):
             bad_keys = []
             # error_msg = "The following Parameters have invalid values: \n"
             for i in msg.errors():
-                # print(i)
+                print(i)
                 # error_msg = error_msg+f"""{i['loc'][0]} : {i['loc'][1]} \n"""
                 bad_keys.append({i["loc"][0]: i["loc"][1]})
             # error_message(error_msg)
@@ -295,6 +295,7 @@ class ConfigDialog(QDialog, AppSettings):
                            "grass_api_endpoint": self.grass_api_endpoint.text()},
             "Filesystem": {"filemanager": self.filemanager.text()},
         }
+        print(gui_settings)
         return gui_settings
 
 
@@ -340,6 +341,9 @@ def validate_config2(settings, get_bad_keys=False):
             return bad_keys
         else:
             return False
+    except KeyError as msg:
+        print(msg)
+        return False
 
 
 def get_settings2(config):
@@ -347,6 +351,7 @@ def get_settings2(config):
     try:
         with open(config, "r", encoding="utf8") as config_file:
             settings = yaml.safe_load(config_file)
+            print(settings)
             return settings
     except FileNotFoundError as notfound:
         return False

@@ -22,6 +22,7 @@ class GrassConfigDialog(QDialog, GrassSettings):
         super().__init__()
         QDialog.__init__(self, parent)
         self.setupUi(self)
+        self.parent = parent
         # access to the settings
         self.config = config # os.environ.get('HBC_CONFIG')
         #if not self.settings:

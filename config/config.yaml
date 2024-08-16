@@ -1,6 +1,6 @@
 ---
 Filesystem:
-    filemanager: /usr/bin/nautilus
+    filemanager: C:/Users/Field/Downloads/groundtruther_test_dataset/groundtruther_test_dataset/mbes_2015.parquet
 HabCam:
     imagepath: /home/epinux/dev/PHD/letsmoveon/Groundtruther/data/imgs_jpg
     imagemetadata: /home/epinux/dev/PHD/letsmoveon/Groundtruther/data/imagemetadata.pq
@@ -11,4 +11,5 @@ Export:
     kmldir: /home/epinux/Downloads
 Processing:
     gpu_avaibility: False
+    grass_api_endpoint: https://mbapi.wps.met.no
     grass_api_endpoint: https://mbapi.wps.met.no
